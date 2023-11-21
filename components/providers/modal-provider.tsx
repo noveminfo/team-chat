@@ -2,6 +2,7 @@
 
 import { useIsMounted } from "usehooks-ts";
 import { CreateServerModal } from "../modals/create-server-modal";
+import { InviteModal } from "../modals/invite-modal";
 
 export const ModalProvider = () => {
   const isMounted = useIsMounted();
@@ -13,6 +14,7 @@ export const ModalProvider = () => {
   return (
     <>
       <CreateServerModal />
+      <InviteModal />
     </>
   );
 };

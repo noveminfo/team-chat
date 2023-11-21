@@ -56,8 +56,8 @@ export const CreateServerModal = () => {
       await axios.post("/api/servers", values);
 
       form.reset();
-      router.refresh();
       onClose();
+      router.refresh();
     } catch (error) {
       console.log(error);
     }
@@ -70,8 +70,8 @@ export const CreateServerModal = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+        <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-center">
             Customize your server
           </DialogTitle>
@@ -120,8 +120,8 @@ export const CreateServerModal = () => {
                 )}
               />
             </div>
-            <DialogFooter>
-              <Button variant="secondary" disabled={isLoading}>
+            <DialogFooter className="bg-gray-100 px-6 py-4">
+              <Button variant="default" disabled={isLoading}>
                 Create
               </Button>
             </DialogFooter>
