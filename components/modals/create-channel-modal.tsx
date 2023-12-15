@@ -23,37 +23,56 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { FileUpload } from "../file-upload";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useModal } from "@/hooks/use-modal-store";
+import { ChannelType } from "@prisma/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import qs from "query-string";
 
 const formSchema = z.object({
-  name: z.string().min(1, {
-    message: "Server name is requeired.",
-  }),
-  imageUrl: z.string().min(1, {
-    message: "Server image is requeired.",
-  }),
+  name: z
+    .string()
+    .min(1, {
+      message: "Channel name is requeired.",
+    })
+    .refine((name) => name !== "general", {
+      message: "Channel name cannot be 'general'",
+    }),
+  type: z.nativeEnum(ChannelType),
 });
 
-export const CreateServerModal = () => {
+export const CreateChannelModal = () => {
   const { isOpen, onClose, type } = useModal();
+  const router = useRouter();
+  const params = useParams();
+
+  const isModalOpen = isOpen && type === "createChannel";
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      imageUrl: "",
+      type: ChannelType.TEXT,
     },
   });
 
-  const router = useRouter();
-
   const isLoading = form.formState.isSubmitting;
-
-  const isModalOpen = isOpen && type === "createServer";
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await axios.post("/api/servers", values);
+      const url = qs.stringifyUrl({
+        url: "/api/channels",
+        query: {
+          serverId: params?.serverId,
+        },
+      });
+      await axios.post(url, values);
 
       form.reset();
       onClose();
@@ -72,9 +91,7 @@ export const CreateServerModal = () => {
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
       <DialogContent className="bg-white text-black p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-center">
-            Customize your server
-          </DialogTitle>
+          <DialogTitle className="text-center">Create Channel</DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
             Give your server a personality with a name and an image.
           </DialogDescription>
@@ -82,40 +99,52 @@ export const CreateServerModal = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-8 px-6">
-              <div className="flex items-center justify-center">
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <FileUpload
-                          endpoint="serverImage"
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Server name</FormLabel>
+                    <FormLabel>Channel name</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Enter server name"
+                        placeholder="Enter channel name"
                         className="border-0 focus-visible:ring-0 bg-zinc-300/50 focus-visible:ring-offset-0"
                         {...field}
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Channel Type</FormLabel>
+                    <Select
+                      disabled={isLoading}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-zinc-300/50 border-0 focus:ring-0 ring-offset-0 focus:ring-offset-0 capitalize outline-none">
+                          <SelectValue placeholder="Select a channel type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(ChannelType).map((type) => (
+                          <SelectItem
+                            key={type}
+                            value={type}
+                            className="capitalize"
+                          >
+                            {type.toLowerCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />
