@@ -54,7 +54,6 @@ const InitialModal = () => {
 
       form.reset();
       router.refresh();
-      window.location.reload();
     } catch (error) {
       console.log(error);
     }
@@ -115,7 +114,7 @@ const InitialModal = () => {
               />
             </div>
             <DialogFooter>
-              <Button variant="secondary" disabled={isLoading}>
+              <Button variant="primary" disabled={isLoading}>
                 Create
               </Button>
             </DialogFooter>
