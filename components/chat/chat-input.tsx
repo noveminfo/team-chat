@@ -6,9 +6,12 @@ import qs from "query-string";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem } from "../ui/form";
-import { Plus, Smile } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Input } from "../ui/input";
 import { useModal } from "@/hooks/use-modal-store";
+import { EmojiPicker } from "../emoji-picker";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 type Props = {
   apiUrl: string;
@@ -23,12 +26,18 @@ const formSchema = z.object({
 
 export const ChatInput = ({ apiUrl, query, name, type }: Props) => {
   const { onOpen } = useModal();
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       content: "",
     },
   });
+
+  const {
+    setFocus,
+    formState: { isDirty },
+  } = form;
 
   const isLoading = form.formState.isSubmitting;
 
@@ -39,11 +48,23 @@ export const ChatInput = ({ apiUrl, query, name, type }: Props) => {
         query,
       });
 
+      form.reset();
       await axios.post(url, values);
+      // form.setValue("content", "");
+      // form.setFocus("content");
+      router.refresh();
     } catch (error) {
       console.log(error);
+    } finally {
+      // form.setFocus("content");
     }
   };
+
+  useEffect(() => {
+    if (!isDirty) {
+      setFocus("content");
+    }
+  }, [isDirty, setFocus]);
 
   return (
     <Form {...form}>
@@ -64,14 +85,19 @@ export const ChatInput = ({ apiUrl, query, name, type }: Props) => {
                   </button>
                   <Input
                     disabled={isLoading}
-                    className="px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200"
+                    className="px-14 py-6 text-[18px] bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200"
                     placeholder={`Message ${
                       type === "conversation" ? name : "#" + name
                     }`}
                     {...field}
                   />
                   <div className="absolute top-7 right-8">
-                    <Smile />
+                    <EmojiPicker
+                      onChange={(emoji: string) => {
+                        field.onChange(`${field.value}${emoji}`);
+                        form.setFocus("content");
+                      }}
+                    />
                   </div>
                 </div>
               </FormControl>
